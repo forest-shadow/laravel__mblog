@@ -15,4 +15,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/admin', 'Admin\DashboardController@index');
+Route::group(['as' => 'admin.', 'prefix' => 'admin', 'namespace' => 'Admin'], function() {
+    Route::get('/', 'DashboardController@index')->name('dashboard');
+    Route::resource('/categories', 'CategoriesController');
+});
