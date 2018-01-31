@@ -9,6 +9,13 @@ class Tag extends Model
 {
     use Sluggable;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = ['title'];
+
     public function posts()
     {
         return $this->belongsToMany(
