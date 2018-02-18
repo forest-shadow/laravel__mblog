@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -18,7 +19,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email'
     ];
 
     /**
@@ -48,8 +49,6 @@ class User extends Authenticatable
     {
         $user = new static;
         $user->fill($fields);
-        // using bcrypt method for password hashing
-        $user->password = bcrypt($fields['password']);
         $user->save();
 
         return $user;
@@ -58,36 +57,54 @@ class User extends Authenticatable
     public function edit($fields)
     {
         $this->fill($fields);
-        $this->password = bcrypt($fields['password']);
         $this->save();
+    }
+
+    public function generatePassword($password)
+    {
+        if($password != null)
+        {
+            $this->password = bcrypt($password);
+            $this->save();
+        }
     }
 
     public function remove()
     {
-        Storage::delete('uploads/' . $this->image);
+        $this->removeAvatar();
         $this->delete();
     }
 
     public function uploadAvatar($image)
     {
         if($image == null) { return; }
-        // if use edit mode, delete previous uploaded image to replace it with new one
-        Storage::delete('uploads/' . $this->image);
+
+        $this->removeAvatar();
+
         // generate image's filename
         $filename = str_random(10) . '.' . $image->extension();
-        $image->saveAs('uploads', $filename);
-        $this->image = $filename;
+        $image->storeAs('uploads', $filename);
+        $this->avatar = $filename;
         $this->save();
+    }
+
+    public function removeAvatar()
+    {
+        // if use edit mode, delete previous uploaded image to replace it with new one
+        if($this->avatar != null)
+        {
+            Storage::delete('uploads/' . $this->avatar);
+        }
     }
 
     public function getImage()
     {
-        if($this->image == null)
+        if($this->avatar == null)
         {
             return '/img/no-user-image.png';
         }
 
-        return '/uploads/' . $this->image;
+        return '/uploads/' . $this->avatar;
     }
 
     public function makeAdmin()
